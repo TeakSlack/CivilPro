@@ -4,6 +4,7 @@
 
 int main()
 {
+	UsbDevice *usbDevice = new UsbDevice;
 
-	std::cout << GetDevicePath() << std::endl;
+	return 0;
 }

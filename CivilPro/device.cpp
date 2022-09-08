@@ -4,7 +4,7 @@
 #include "device.h"
 
 // This is probably the worst function I've ever written, it's held together by literal black magic
-const char* GetDevicePath()
+const char* UsbDevice::GetDevicePath()
 {
 	/* 
 	okay the following is self explanitory but i have a funny story! 
@@ -39,15 +39,16 @@ const char* GetDevicePath()
 
 	SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, NULL, 0, &requiredLength, NULL); // this is expected to return FALSE
 
-	PSP_DEVICE_INTERFACE_DETAIL_DATA detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(requiredLength);
+	SP_DEVICE_INTERFACE_DETAIL_DATA *detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(requiredLength);
 
-	if (!detailData)
+	if (detailData == NULL)
 	{
 		free(detailData);
 		SetupDiDestroyDeviceInfoList(deviceInfo);
+		return NULL;
 	}
 
-	// shut up msvc this isn't a null pointer
+	
 	detailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 	unsigned long length = requiredLength;
 
@@ -60,8 +61,30 @@ const char* GetDevicePath()
 
 	}
 
-	return _strdup(detailData->DevicePath);
+	return detailData->DevicePath;
 
 	free(detailData);
 	SetupDiDestroyDeviceInfoList(deviceInfo);
+}
+
+UsbDevice::UsbDevice()
+{
+	const char* devicePath = GetDevicePath();
+	if (devicePath == NULL)
+		return;
+
+	deviceData.DeviceHandle = CreateFile(devicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+
+	if (!WinUsb_Initialize(deviceData.DeviceHandle, &deviceData.WinusbInterfaceHandle))
+	{
+		CloseHandle(deviceData.DeviceHandle);
+		std::cerr << "Could not initialize WinUsb device!" << std::endl;
+	}
+
+}
+
+UsbDevice::~UsbDevice()
+{
+	WinUsb_Free(deviceData.WinusbInterfaceHandle);
+	CloseHandle(deviceData.DeviceHandle);
 }
