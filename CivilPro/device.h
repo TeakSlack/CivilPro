@@ -14,12 +14,16 @@ public:
 	UsbDevice();
     // Clean up
 	~UsbDevice();
-
-    // Dynamically find USB endpoints
-    void QueryEndpoints();
+    
+    // Write to programmer
+    void Write(void* buffer, size_t size, uint8_t endpoint);
+    // Read from programmer
+    void Read(void *buffer, size_t size, uint8_t endpoint);
 private:
     // Get path for TL866II+, called in constructor
     const char* GetDevicePath();
+    // Dynamically find USB endpoints
+    void QueryEndpoints();
 
     // Internal member data
     WINUSB_INTERFACE_HANDLE m_InterfaceHandle;

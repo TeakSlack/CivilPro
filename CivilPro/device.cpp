@@ -83,7 +83,10 @@ UsbDevice::UsbDevice()
 		std::cerr << "Could not initialize WinUsb device!" << std::endl;
 	}
 
-	QueryEndpoints();
+	uint8_t value = 1;
+	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x81, AUTO_FLUSH, 1, &value);
+	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x82, AUTO_FLUSH, 1, &value);
+	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x83, AUTO_FLUSH, 1, &value);
 }
 
 UsbDevice::~UsbDevice()
@@ -110,4 +113,24 @@ void UsbDevice::QueryEndpoints()
 		else if (USB_ENDPOINT_DIRECTION_OUT(pipeInfo.PipeId))
 			std::cout << "BULK OUT PIPE ID: " << (UINT)pipeInfo.PipeId << " ENDPOINT INDEX: " << i << std::endl;
 	}
+}
+
+void UsbDevice::Write(void* buffer, size_t size, uint8_t endpoint)
+{
+	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
+
+	ULONG bytesWritten = 0;
+
+	if (!WinUsb_WritePipe(m_InterfaceHandle, endpoint, (PUCHAR)buffer, size, &bytesWritten, NULL))
+		std::cout << "USB write failed!" << std::endl;
+}
+
+void UsbDevice::Read(void* buffer, size_t size, uint8_t endpoint)
+{
+	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
+
+	ULONG bytesRead = 0;
+
+	if(!WinUsb_ReadPipe(m_InterfaceHandle, endpoint, (PUCHAR)buffer, size, &bytesRead, NULL))
+		std::cout << "USB read failed!" << std::endl;
 }
