@@ -1,5 +1,4 @@
 #include <iostream>
-#include <strsafe.h>
 
 #include "device.h"
 
@@ -35,13 +34,15 @@ const char* UsbDevice::GetDevicePath()
 		return NULL;
 	}
 
+	// pt 2, actually get the device path
+
 	unsigned long requiredLength = 0;
 
 	SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, NULL, 0, &requiredLength, NULL); // this is expected to return FALSE
 
-	SP_DEVICE_INTERFACE_DETAIL_DATA *detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(requiredLength);
+	SP_DEVICE_INTERFACE_DETAIL_DATA *detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(requiredLength); // why are we using malloc in c++?
 
-	if (detailData == NULL)
+	if (detailData == NULL) // null checks null checks!!
 	{
 		free(detailData);
 		SetupDiDestroyDeviceInfoList(deviceInfo);
@@ -54,7 +55,7 @@ const char* UsbDevice::GetDevicePath()
 
 	if (!SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, detailData, length, &requiredLength, NULL))
 	{
-		std::cerr << "Fatal error in SetupDiGetDeviceInterfaceDetail: " << HRESULT_FROM_WIN32(GetLastError()) << std::endl;
+		std::cerr << "Fatal error in SetupDiGetDeviceInterfaceDetail" << std::endl;
 		SetupDiDestroyDeviceInfoList(deviceInfo);
 		free(detailData);
 		return NULL;
@@ -73,18 +74,40 @@ UsbDevice::UsbDevice()
 	if (devicePath == NULL)
 		return;
 
-	deviceData.DeviceHandle = CreateFile(devicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+	// this gives the same vibes as bullying george bush
+	m_DeviceHandle = CreateFile(devicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
 
-	if (!WinUsb_Initialize(deviceData.DeviceHandle, &deviceData.WinusbInterfaceHandle))
+	if (!WinUsb_Initialize(m_DeviceHandle, &m_InterfaceHandle))
 	{
-		CloseHandle(deviceData.DeviceHandle);
+		CloseHandle(m_DeviceHandle);
 		std::cerr << "Could not initialize WinUsb device!" << std::endl;
 	}
 
+	QueryEndpoints();
 }
 
 UsbDevice::~UsbDevice()
 {
-	WinUsb_Free(deviceData.WinusbInterfaceHandle);
-	CloseHandle(deviceData.DeviceHandle);
+	WinUsb_Free(m_InterfaceHandle);
+	CloseHandle(m_DeviceHandle);
+}
+
+void UsbDevice::QueryEndpoints()
+{
+	// get # of endpoints
+	USB_INTERFACE_DESCRIPTOR interfaceDesc;
+	if (!WinUsb_QueryInterfaceSettings(m_InterfaceHandle, 0, &interfaceDesc)) return;
+
+	WINUSB_PIPE_INFORMATION pipeInfo;
+
+	for (int i = 0; i < interfaceDesc.bNumEndpoints; i++) // for TL866II+, every endpoint will be bulk. Index is i-1
+	{
+		if (!WinUsb_QueryPipe(m_InterfaceHandle, 0, i, &pipeInfo)) // probably redundant, used in development of application
+			return;
+		
+		if (USB_ENDPOINT_DIRECTION_IN(pipeInfo.PipeId))
+			std::cout << "BULK IN PIPE ID: " << (UINT)pipeInfo.PipeId << " ENDPOINT INDEX: " << i << std::endl;
+		else if (USB_ENDPOINT_DIRECTION_OUT(pipeInfo.PipeId))
+			std::cout << "BULK OUT PIPE ID: " << (UINT)pipeInfo.PipeId << " ENDPOINT INDEX: " << i << std::endl;
+	}
 }
