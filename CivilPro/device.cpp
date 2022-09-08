@@ -3,7 +3,7 @@
 #include "device.h"
 
 // This is probably the worst function I've ever written, it's held together by literal black magic
-const char* UsbDevice::GetDevicePath()
+LPCWSTR UsbDevice::GetDevicePath()
 {
 	/* 
 	okay the following is self explanitory but i have a funny story! 
@@ -70,7 +70,7 @@ const char* UsbDevice::GetDevicePath()
 
 UsbDevice::UsbDevice()
 {
-	const char* devicePath = GetDevicePath();
+	LPCWSTR devicePath = GetDevicePath();
 	if (devicePath == NULL)
 		return;
 

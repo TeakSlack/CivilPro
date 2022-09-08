@@ -19,7 +19,7 @@ public:
     void QueryEndpoints();
 private:
     // Get path for TL866II+, called in constructor
-    const char* GetDevicePath();
+    LPCWSTR GetDevicePath();
 
     // Internal member data
     WINUSB_INTERFACE_HANDLE m_InterfaceHandle;
