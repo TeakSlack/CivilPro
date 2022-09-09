@@ -2,7 +2,7 @@
 
 #include "device.h"
 
-typedef struct minipro_report_info
+struct minipro_report_info
 {
 	uint8_t  echo;
 	uint8_t  device_status;
@@ -17,18 +17,17 @@ typedef struct minipro_report_info
 
 int main()
 {
-	UsbDevice* usbDevice = new UsbDevice;
+	UsbDevice usbDevice;
 
 	uint8_t buffer = 0x00;
-	usbDevice->Write(&buffer, 5, 0x01);
+	usbDevice.Write(&buffer, 5, 0x01);
 
 	uint8_t msg[sizeof(minipro_report_info)] = {0};
 
-	usbDevice->Read(&msg, sizeof(msg), 0x81);
+	usbDevice.Read(&msg, sizeof(msg), 0x01);
 
 	minipro_report_info deviceInfo;
 	std::memcpy(&deviceInfo, msg, sizeof(msg));
 
-	delete usbDevice;
 	return 0;
 }

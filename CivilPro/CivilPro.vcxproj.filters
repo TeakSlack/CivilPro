@@ -18,12 +18,18 @@
     <ClInclude Include="device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="civilpro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="civilpro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

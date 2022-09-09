@@ -11,21 +11,26 @@ class UsbDevice
 {
 public:
     // Find TL866II+ programmer and create handle for it.
-	UsbDevice();
+    UsbDevice(bool verbose = false);
     // Clean up
 	~UsbDevice();
     
     // Write to programmer
-    void Write(void* buffer, size_t size, uint8_t endpoint);
+    template <typename T>
+    void Write(T* buffer, unsigned long size, uint8_t endpoint);
     // Read from programmer
-    void Read(void *buffer, size_t size, uint8_t endpoint);
+    template <typename T>
+    void Read(T *buffer, unsigned long size, uint8_t endpoint);
 private:
     // Get path for TL866II+, called in constructor
     const char* GetDevicePath();
     // Dynamically find USB endpoints
     void QueryEndpoints();
+    void SetupUsb();
 
     // Internal member data
+    bool m_Verbose;
+    bool m_DevicePresent;
     WINUSB_INTERFACE_HANDLE m_InterfaceHandle;
     HANDLE m_DeviceHandle;
 };

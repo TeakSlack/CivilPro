@@ -135,9 +135,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="civilpro.h" />
     <ClInclude Include="device.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="civilpro.cpp" />
     <ClCompile Include="device.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

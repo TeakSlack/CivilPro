@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "device.h"
 
@@ -40,7 +41,7 @@ const char* UsbDevice::GetDevicePath()
 
 	SetupDiGetDeviceInterfaceDetail(deviceInfo, &interfaceData, NULL, 0, &requiredLength, NULL); // this is expected to return FALSE
 
-	SP_DEVICE_INTERFACE_DETAIL_DATA *detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)malloc(requiredLength); // why are we using malloc in c++?
+	SP_DEVICE_INTERFACE_DETAIL_DATA *detailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)operator new(requiredLength); // the windows api is so poorly designed
 
 	if (detailData == NULL) // null checks null checks!!
 	{
@@ -62,13 +63,12 @@ const char* UsbDevice::GetDevicePath()
 
 	}
 
-	return detailData->DevicePath;
-
-	free(detailData);
 	SetupDiDestroyDeviceInfoList(deviceInfo);
+
+	return detailData->DevicePath;
 }
 
-UsbDevice::UsbDevice()
+void UsbDevice::SetupUsb()
 {
 	const char* devicePath = GetDevicePath();
 	if (devicePath == NULL)
@@ -83,10 +83,18 @@ UsbDevice::UsbDevice()
 		std::cerr << "Could not initialize WinUsb device!" << std::endl;
 	}
 
+	m_DevicePresent = true;
+
 	uint8_t value = 1;
 	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x81, AUTO_FLUSH, 1, &value);
 	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x82, AUTO_FLUSH, 1, &value);
 	WinUsb_SetPipePolicy(m_InterfaceHandle, 0x83, AUTO_FLUSH, 1, &value);
+}
+
+UsbDevice::UsbDevice(bool verbose)
+	: m_Verbose(verbose)
+{
+	SetupUsb();
 }
 
 UsbDevice::~UsbDevice()
@@ -115,22 +123,33 @@ void UsbDevice::QueryEndpoints()
 	}
 }
 
-void UsbDevice::Write(void* buffer, size_t size, uint8_t endpoint)
+template <typename T>
+void UsbDevice::Write(T* buffer, unsigned long size, uint8_t endpoint)
 {
 	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
+	if (!m_DevicePresent) return;
 
 	ULONG bytesWritten = 0;
 
-	if (!WinUsb_WritePipe(m_InterfaceHandle, endpoint, (PUCHAR)buffer, size, &bytesWritten, NULL))
+	if (!WinUsb_WritePipe(m_InterfaceHandle, endpoint, buffer, size, &bytesWritten, NULL))
 		std::cout << "USB write failed!" << std::endl;
+
+	if (m_Verbose)
+		std::cout << bytesWritten << " bytes written!" << std::endl;
 }
 
-void UsbDevice::Read(void* buffer, size_t size, uint8_t endpoint)
+// Endpoint should be given as 0x01, 0x02, or 0x03. It is converted to this format automatically
+template <typename T>
+void UsbDevice::Read(T* buffer, unsigned long size, uint8_t endpoint)
 {
 	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
+	if (!m_DevicePresent) return;
 
 	ULONG bytesRead = 0;
 
-	if(!WinUsb_ReadPipe(m_InterfaceHandle, endpoint, (PUCHAR)buffer, size, &bytesRead, NULL))
+	if(!WinUsb_ReadPipe(m_InterfaceHandle, 0x80 | endpoint, buffer, size, &bytesRead, NULL))
 		std::cout << "USB read failed!" << std::endl;
+
+	if (m_Verbose)
+		std::cout << bytesRead << " bytes read!" << std::endl;
 }
