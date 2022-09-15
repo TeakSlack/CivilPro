@@ -17,10 +17,15 @@ public:
     
     // Write to programmer
     template <typename T>
-    void Write(T* buffer, unsigned long size, uint8_t endpoint);
+    void Write(T* buffer, unsigned long size, int endpoint);
     // Read from programmer
     template <typename T>
-    void Read(T *buffer, unsigned long size, uint8_t endpoint);
+    void Read(T *buffer, unsigned long size, int endpoint);
+    // Check if usb device is present
+    bool IsDevicePresent() const
+    {
+        return m_DevicePresent;
+    }
 private:
     // Get path for TL866II+, called in constructor
     const char* GetDevicePath();

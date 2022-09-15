@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 
 #include "device.h"
 
@@ -30,7 +29,7 @@ const char* UsbDevice::GetDevicePath()
 	// have a look at https://pixcl.com/oldsite/SetupDiEnumInterfaces-Fail.htm
 	if (!SetupDiEnumDeviceInterfaces(deviceInfo, NULL, &TL866IIPLUS_GUID, 0, &interfaceData))
 	{
-		std::cerr << "No devices found! Please plug in programmer and make sure connector is secured." << std::endl;
+		m_DevicePresent = false;
 		SetupDiDestroyDeviceInfoList(deviceInfo);
 		return NULL;
 	}
@@ -124,12 +123,12 @@ void UsbDevice::QueryEndpoints()
 }
 
 template <typename T>
-void UsbDevice::Write(T* buffer, unsigned long size, uint8_t endpoint)
+void UsbDevice::Write(T* buffer, unsigned long size, int endpoint)
 {
 	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
 	if (!m_DevicePresent) return;
 
-	ULONG bytesWritten = 0;
+	unsigned long bytesWritten = 0;
 
 	if (!WinUsb_WritePipe(m_InterfaceHandle, endpoint, buffer, size, &bytesWritten, NULL))
 		std::cout << "USB write failed!" << std::endl;
@@ -140,12 +139,12 @@ void UsbDevice::Write(T* buffer, unsigned long size, uint8_t endpoint)
 
 // Endpoint should be given as 0x01, 0x02, or 0x03. It is converted to this format automatically
 template <typename T>
-void UsbDevice::Read(T* buffer, unsigned long size, uint8_t endpoint)
+void UsbDevice::Read(T* buffer, unsigned long size, int endpoint)
 {
 	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
 	if (!m_DevicePresent) return;
 
-	ULONG bytesRead = 0;
+	unsigned long bytesRead = 0;
 
 	if(!WinUsb_ReadPipe(m_InterfaceHandle, 0x80 | endpoint, buffer, size, &bytesRead, NULL))
 		std::cout << "USB read failed!" << std::endl;
