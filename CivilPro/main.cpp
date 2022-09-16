@@ -1,10 +1,8 @@
-#include <iostream>
-
 #include "civilpro.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-	CivilPro civ;
+	CivilPro civ(argc, argv);
 
 	return 0;
 }
