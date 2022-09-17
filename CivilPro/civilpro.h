@@ -13,7 +13,7 @@ enum class EnumArgCommands
 
 struct ArgCommand
 {
-	EnumArgCommands command;
+	EnumArgCommands commandType;
 	bool requiresValue;
 };
 
@@ -26,7 +26,6 @@ public:
 	void ProcessArgs(int argc, char* argv[]);
 	void ExecuteArgs();
 private:
-	const UsbDevice m_Device;
+	UsbDevice m_Device;
 	std::vector<ArgCommand> m_Commands;
 };
-

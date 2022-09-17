@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-	CivilPro civ(argc, argv);
+	CivilPro civil(argc, argv);
 
 	return 0;
 }
