@@ -14,7 +14,8 @@ enum class EnumArgCommands
 struct ArgCommand
 {
 	EnumArgCommands commandType;
-	bool requiresValue;
+	bool requiresValue = false;
+	EnumArgCommands requiredCommandType = EnumArgCommands::NONE;
 };
 
 // Central state managment and command processing
@@ -26,6 +27,9 @@ public:
 	void ProcessArgs(int argc, char* argv[]);
 	void ExecuteArgs();
 private:
+	void EnableVerboseMode();
+	void PrintHelpText();
+
 	UsbDevice m_Device;
 	std::vector<ArgCommand> m_Commands;
 };

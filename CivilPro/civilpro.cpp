@@ -12,10 +12,10 @@ void CivilPro::ProcessArgs(int argc, char* argv[])
 {
 	for (int i = 0; i < argc; i++)
 	{
-		ArgCommand command = { EnumArgCommands::NONE, false };
+		ArgCommand command = { EnumArgCommands::NONE };
 
-		if (std::strcmp(argv[i], "-v") == 0) command = {EnumArgCommands::VERBOSE, false};
-		if (std::strcmp(argv[i], "-h") == 0) command = {EnumArgCommands::HELP, false};
+		if (std::strcmp(argv[i], "-v") == 0) command = { EnumArgCommands::VERBOSE };
+		if (std::strcmp(argv[i], "-h") == 0) command = { EnumArgCommands::HELP };
 
 		if (command.commandType != EnumArgCommands::NONE) m_Commands.push_back(command);
 	}
@@ -28,11 +28,23 @@ void CivilPro::ExecuteArgs()
 		switch (command.commandType)
 		{
 		case EnumArgCommands::VERBOSE:
-			std::cout << "verbose has been input" << std::endl;
+			EnableVerboseMode();
 			break;
 		case EnumArgCommands::HELP:
-			std::cout << "help has been input" << std::endl;
+			PrintHelpText();
 			break;
 		}
 	}
+}
+
+void CivilPro::EnableVerboseMode()
+{
+	std::cout << "CivilPro has been launched in verbose mode." << std::endl;
+	m_Device.SetVerboseWrite();
+}
+
+// TODO: print help blurb
+void CivilPro::PrintHelpText()
+{
+
 }
