@@ -18,7 +18,7 @@ public:
     
     // Write to programmer
     template <typename T>
-    void Write(T* buffer, unsigned long size, int endpoint)
+    inline void Write(T* buffer, unsigned long size, int endpoint)
     {
         if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
         if (!m_DevicePresent) return;
@@ -33,7 +33,7 @@ public:
     }
     // Read from programmer
     template <typename T>
-    void Read(T* buffer, unsigned long size, int endpoint)
+    inline void Read(T* buffer, unsigned long size, int endpoint)
     {
         if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
         if (!m_DevicePresent) return;

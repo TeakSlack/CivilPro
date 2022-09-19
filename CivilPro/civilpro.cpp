@@ -1,11 +1,12 @@
 #include "civilpro.h"
 
 #include <iostream>
+#include <string>
+#include <deque>
 
 CivilPro::CivilPro(int argc, char* argv[])
 {
 	ProcessArgs(argc, argv);
-	ExecuteArgs();
 }
 
 void CivilPro::ProcessArgs(int argc, char* argv[])
@@ -20,6 +21,16 @@ void CivilPro::ProcessArgs(int argc, char* argv[])
 	{
 		ArgCommand command = { EnumArgCommands::NONE };
 
+#ifdef _DEBUG
+		if (std::strcmp(argv[i], "-d") == 0)
+		{
+			std::cout << "CivilPro launched in debug mode. Please input command line parameters: " << std::endl;
+
+			std::string args;
+			std::getline(std::cin, args);	
+		}
+#endif
+
 		if (std::strcmp(argv[i], "-v") == 0) command = { EnumArgCommands::VERBOSE };
 		if (std::strcmp(argv[i], "-h") == 0) command = { EnumArgCommands::HELP, false, true };
 		if (std::strcmp(argv[i], "-i") == 0) command = { EnumArgCommands::INFO, false, true };
@@ -28,8 +39,10 @@ void CivilPro::ProcessArgs(int argc, char* argv[])
 	}
 }
 
-void CivilPro::ExecuteArgs()
+std::deque<CommandExectuor> CivilPro::ReorganizeArgs()
 {
+	std::deque<CommandExectuor> commandExecutionOrder;
+	
 	int exclusiveFlags = 0;
 
 	for (ArgCommand command : m_Commands)
@@ -44,16 +57,18 @@ void CivilPro::ExecuteArgs()
 		switch (command.commandType)
 		{
 		case EnumArgCommands::VERBOSE:
-			EnableVerboseMode();
+			commandExecutionOrder.push_front({ EnumArgCommands::VERBOSE, "" });
 			break;
 		case EnumArgCommands::HELP:
-			PrintHelpText();
+			commandExecutionOrder.push_back({ EnumArgCommands::HELP, "" });
 			break;
 		case EnumArgCommands::INFO:
-			PrintSystemInfo();
+			commandExecutionOrder.push_back({ EnumArgCommands::INFO, "" });
 			break;
 		}
 	}
+
+	return commandExecutionOrder;
 }
 
 void CivilPro::EnableVerboseMode()
@@ -72,8 +87,9 @@ void CivilPro::PrintSystemInfo()
 {
 	ProgrammerInfo info = m_Programmer.GetProgrammerInfo();
 
+	const char* deviceName = (info.device_version == 5) ? "TL866II+" : "Unknown device!";
+
 	std::cout << "Programmer Info: " << std::endl << std::endl;
-	std::cout << "Device version: " << (int)info.device_version << std::endl;
-	std::cout << "Hardware version: " << (int)info.hardware_version << std::endl;
-	std::cout << "Firmware version: " << (int)info.firmware_version_major << (int)info.firmware_version_minor << std::endl;
+	std::cout << "Device: " << deviceName << std::endl;
+	std::cout << "Firmware version: " << (int)info.hardware_version << "." << (int)info.firmware_version_major << "." << (int)info.firmware_version_minor << std::endl;
 }
