@@ -21,6 +21,9 @@
     <ClInclude Include="civilpro.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tl_programmer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="device.cpp">
@@ -30,6 +33,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="civilpro.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tl_programmer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

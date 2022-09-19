@@ -137,11 +137,13 @@
   <ItemGroup>
     <ClInclude Include="civilpro.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="tl_programmer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="civilpro.cpp" />
     <ClCompile Include="device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tl_programmer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

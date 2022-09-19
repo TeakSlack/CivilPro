@@ -80,6 +80,7 @@ void UsbDevice::SetupUsb()
 	{
 		CloseHandle(m_DeviceHandle);
 		std::cerr << "Could not initialize WinUsb device!" << std::endl;
+		exit(-1);
 	}
 
 	m_DevicePresent = true;
@@ -120,35 +121,4 @@ void UsbDevice::QueryEndpoints()
 		else if (USB_ENDPOINT_DIRECTION_OUT(pipeInfo.PipeId))
 			std::cout << "BULK OUT PIPE ID: " << (UINT)pipeInfo.PipeId << " ENDPOINT INDEX: " << i << std::endl;
 	}
-}
-
-template <typename T>
-void UsbDevice::Write(T* buffer, unsigned long size, int endpoint)
-{
-	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
-	if (!m_DevicePresent) return;
-
-	unsigned long bytesWritten = 0;
-
-	if (!WinUsb_WritePipe(m_InterfaceHandle, endpoint, buffer, size, &bytesWritten, NULL))
-		std::cout << "USB write failed!" << std::endl;
-
-	if (m_Verbose)
-		std::cout << bytesWritten << " bytes written!" << std::endl;
-}
-
-// Endpoint should be given as 0x01, 0x02, or 0x03. It is converted to this format automatically
-template <typename T>
-void UsbDevice::Read(T* buffer, unsigned long size, int endpoint)
-{
-	if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
-	if (!m_DevicePresent) return;
-
-	unsigned long bytesRead = 0;
-
-	if(!WinUsb_ReadPipe(m_InterfaceHandle, 0x80 | endpoint, buffer, size, &bytesRead, NULL))
-		std::cout << "USB read failed!" << std::endl;
-
-	if (m_Verbose)
-		std::cout << bytesRead << " bytes read!" << std::endl;
 }

@@ -3,18 +3,21 @@
 #include <vector>
 
 #include "device.h"
+#include "tl_programmer.h"
 
 enum class EnumArgCommands
 {
 	NONE,
 	HELP,
 	VERBOSE,
+	INFO,
 };
 
 struct ArgCommand
 {
 	EnumArgCommands commandType;
 	bool requiresValue = false;
+	bool exclusiveFlag = false; // ONLY this flag can be passed, will throw error if more than 1 exclusive flag(s) are passed
 	EnumArgCommands requiredCommandType = EnumArgCommands::NONE;
 };
 
@@ -29,7 +32,8 @@ public:
 private:
 	void EnableVerboseMode();
 	void PrintHelpText();
+	void PrintSystemInfo();
 
-	UsbDevice m_Device;
+	TLProgrammer m_Programmer;
 	std::vector<ArgCommand> m_Commands;
 };
