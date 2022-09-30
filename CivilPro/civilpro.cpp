@@ -2,53 +2,96 @@
 
 #include <iostream>
 #include <string>
-#include <deque>
+#include <algorithm>
 
-CivilPro::CivilPro(int argc, char* argv[])
+CivilPro::CivilPro(const int& argc, char* argv[])
 {
-	ProcessArgs(argc, argv);
+	std::vector<ArgToken> tokens = TokenizeArgs(argc, argv);
+	std::deque<CommandExecutor> orderedCommands = ReorderArgs(tokens);
 }
 
-void CivilPro::ProcessArgs(int argc, char* argv[])
+// Handles tokenization of parameters passed to CivilPro. It not handle execution of these tokens ("-d" being the only exception, not compiled when set to release)
+std::vector<ArgToken> CivilPro::TokenizeArgs(const int argc, char* argv[])
 {
+	std::vector<ArgToken> commands;
+	const char* exit_blurb = "Please rerun CivilPro with proper arguments or with -h for help.";
+
 	if (argc == 1)
 	{
-		std::cout << "Please rerun CivilPro with proper arguments or with -h flag for help." << std::endl;
+		std::cout << exit_blurb << std::endl;
 		exit(0);
 	}
 
-	for (int i = 0; i < argc; i++)
-	{
-		ArgCommand command = { EnumArgCommands::NONE };
-
 #ifdef _DEBUG
-		if (std::strcmp(argv[i], "-d") == 0)
-		{
-			std::cout << "CivilPro launched in debug mode. Please input command line parameters: " << std::endl;
+	// TODO: make this its own function.
+	std::vector<std::string> args = { "civilpro" };
 
-			std::string args;
-			std::getline(std::cin, args);	
-		}
+	if (std::strcmp(argv[1], "-d") == 0)
+	{
+		std::cout << "CivilPro launched in debug mode. Please input command line parameters: " << std::endl;
+
+		std::string argstream;
+		std::getline(std::cin, argstream);
+
+		size_t arg_pos = argstream.find(" ");
+
+		// seperate input into a vector of strings by space delimiter.
+		do
+		{
+			args.push_back(argstream.substr(0, arg_pos));
+			argstream.erase(0, arg_pos + 1);
+		} while (arg_pos = argstream.find(" ") != std::string::npos);
+
+		if (!argstream.empty()) args.push_back(argstream);
+	}
+
+// Very hacky, although it is the easiest solution and is analogous to normal code when set to release.
+#define argc args.size()
+#define arg args[i].c_str()
+#else
+#define arg argv[i]
 #endif
 
-		if (std::strcmp(argv[i], "-v") == 0) command = { EnumArgCommands::VERBOSE };
-		if (std::strcmp(argv[i], "-h") == 0) command = { EnumArgCommands::HELP, false, true };
-		if (std::strcmp(argv[i], "-i") == 0) command = { EnumArgCommands::INFO, false, true };
+	for (int i = 0; i < argc; i++)
+	{
+		ArgToken command = { EnumArgCommands::NONE };
 
-		if (command.commandType != EnumArgCommands::NONE) m_Commands.push_back(command);
+		if (std::strcmp(arg, "-v") == 0) command = { EnumArgCommands::VERBOSE };
+		else if (std::strcmp(arg, "-h") == 0) command = { EnumArgCommands::HELP, false, true };
+		else if (std::strcmp(arg, "-i") == 0) command = { EnumArgCommands::INFO, false, true };
+
+		if (command.commandType != EnumArgCommands::NONE) commands.push_back(command);
 	}
+
+	return commands;
 }
 
-std::deque<CommandExectuor> CivilPro::ReorganizeArgs()
+std::deque<CommandExecutor> CivilPro::ReorderArgs(const std::vector<ArgToken>& tokens)
 {
-	std::deque<CommandExectuor> commandExecutionOrder;
-	
+	// This is not the most efficient solution but it is the easiest to program.
+	std::deque<CommandExecutor> commandExecutionOrder;
+
 	int exclusiveFlags = 0;
 
-	for (ArgCommand command : m_Commands)
+	if (tokens.size() > 1)
+	{
+		auto loc = std::find_if(tokens.begin(), tokens.end(), [](const ArgToken& token) 
+			{
+				if (token.exclusiveFlag) return true;
+				else return false;
+			});
+		
+		if (loc != tokens.end())
+		{
+			std::cout << "Program ran with more than one exclusive flags!" << std::endl;
+			exit(0);
+		}
+	}
+
+	for (const ArgToken &command : tokens)
 	{
 		if (command.exclusiveFlag) exclusiveFlags++;
-		if (exclusiveFlags > 1)
+		if (exclusiveFlags >= 2)
 		{
 			std::cout << "Program ran with more than one exclusive flags!" << std::endl;
 			exit(0);
@@ -78,7 +121,7 @@ void CivilPro::EnableVerboseMode()
 }
 
 // TODO: print help blurb
-void CivilPro::PrintHelpText()
+void CivilPro::PrintHelpText() const
 {
 	std::cout << "do this" << std::endl;
 }

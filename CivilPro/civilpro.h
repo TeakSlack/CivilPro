@@ -8,16 +8,13 @@
 
 enum class EnumArgCommands
 {
-#ifdef _DEBUG
-	DEBUG,
-#endif
 	NONE,
 	HELP,
 	VERBOSE,
 	INFO,
 };
 
-struct ArgCommand
+struct ArgToken
 {
 	EnumArgCommands commandType;
 	bool requiresValue = false;
@@ -25,25 +22,24 @@ struct ArgCommand
 	EnumArgCommands requiredCommandType = EnumArgCommands::NONE;
 };
 
-struct CommandExectuor
+struct CommandExecutor
 {
 	EnumArgCommands command;
 	std::string value = 0;
 };
 
-// Central state managment and command processing
+// High level I/O
 class CivilPro
 {
 public:
-	CivilPro(int argc, char* argv[]);
+	CivilPro(const int& argc, char* argv[]);
 	
 	void EnableVerboseMode();
-	void PrintHelpText();
+	void PrintHelpText() const;
 	void PrintSystemInfo();
 private:
-	void ProcessArgs(int argc, char* argv[]);
-	std::deque<CommandExectuor> ReorganizeArgs();
+	std::vector<ArgToken> TokenizeArgs(const int argc, char* argv[]);
+	std::deque<CommandExecutor> ReorderArgs(const std::vector<ArgToken>& tokens);
 
 	TLProgrammer m_Programmer;
-	std::vector<ArgCommand> m_Commands;
 };
