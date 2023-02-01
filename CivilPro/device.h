@@ -13,15 +13,14 @@ class UsbDevice
 public:
     // Find TL866II+ programmer and create handle for it.
     UsbDevice(bool verbose = false);
-    // Clean up
 	~UsbDevice();
     
     // Write to programmer
     template <typename T>
     inline void Write(T* buffer, unsigned long size, int endpoint)
     {
-        if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
-        if (!m_DevicePresent) return;
+        if (m_ProgrammerHandle == INVALID_HANDLE_VALUE) return;
+        if (!m_ProgrammerPresent) return;
 
         unsigned long bytesWritten = 0;
 
@@ -35,8 +34,8 @@ public:
     template <typename T>
     inline void Read(T* buffer, unsigned long size, int endpoint)
     {
-        if (m_DeviceHandle == INVALID_HANDLE_VALUE) return;
-        if (!m_DevicePresent) return;
+        if (m_ProgrammerHandle == INVALID_HANDLE_VALUE) return;
+        if (!m_ProgrammerPresent) return;
 
         unsigned long bytesRead = 0;
 
@@ -49,7 +48,7 @@ public:
     // Check if usb device is present
     bool IsDevicePresent() const
     {
-        return m_DevicePresent;
+        return m_ProgrammerPresent;
     }
     void SetVerboseWrite()
     {
@@ -64,7 +63,7 @@ private:
 
     // Internal member data
     bool m_Verbose;
-    bool m_DevicePresent;
+    bool m_ProgrammerPresent;
     WINUSB_INTERFACE_HANDLE m_InterfaceHandle;
-    HANDLE m_DeviceHandle;
+    HANDLE m_ProgrammerHandle;
 };

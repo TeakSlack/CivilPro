@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClInclude Include="civilpro.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="infoic2plus_devices.h" />
     <ClInclude Include="tl_programmer.h" />
   </ItemGroup>
   <ItemGroup>
