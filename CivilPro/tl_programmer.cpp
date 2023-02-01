@@ -9,14 +9,17 @@ static DeviceInfo devices[] =
 	{.name = NULL},
 };
 
-ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+TLProgrammer::TLProgrammer()
 {
 	if (!m_Programmer.IsDevicePresent())
 	{
-		std::cerr << "No programmer found!" << std::endl;
+		std::cout << "No programmer found!" << std::endl;
 		exit(0);
 	}
+}
 
+ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+{
 	ProgrammerInfo info;
 
 	m_Programmer.Write<const int>(&command_getsysteminfo, sizeof(command_getsysteminfo), 0x01);
@@ -39,9 +42,37 @@ DeviceInfo* TLProgrammer::GetDevice(const char* name)
 	return nullptr;
 }
 
-void TLProgrammer::BeginTransaction()
+void TLProgrammer::BeginTransaction(DeviceInfo* device)
 {
+	// 64 byte data structure communicated information about the chip being read/written from to the programmer
 
+	BeginTransactionPayload payload;
+	memset(&payload, 0, 64); // make sure to zero out the payload
+
+	payload.command = command_begintransaction;
+	payload.protocol_id = device->protocol_id;
+	payload.variant = device->variant;
+	payload.opts1 = device->opts1;
+	payload.data_memory_size = device->data_memory_size;
+	payload.opts2 = device->opts2;
+	payload.opts3 = device->opts3;
+	payload.data_memory2_size = device->data_memory2_size;
+	payload.code_memory_size = device->code_memory_size;
+	payload.package_details = device->package_details;
+
+	m_Programmer.Write<BeginTransactionPayload>(&payload, 64, 1);
+
+	// TODO: test for parity between this and MiniPro's begin transaction data structure.
+}
+
+void TLProgrammer::EndTransaction()
+{
+	EndTransactionPayload payload;
+	memset(&payload, 0, 8);
+
+	payload.command = command_endtransaction;
+
+	m_Programmer.Write<EndTransactionPayload>(&payload, 8, 1);
 }
 
 #define MP_FUSE_USER            0x00

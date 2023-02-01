@@ -3,6 +3,9 @@
 #include "device.h"
 
 constexpr int command_getsysteminfo = 0x00;
+constexpr int command_begintransaction = 0x03;
+constexpr int command_endtransaction = 0x04;
+constexpr int command_readcodememory = 0x0D;
 
 struct ProgrammerInfo
 {
@@ -53,9 +56,35 @@ typedef struct DeviceInfo
 	Fuses* fuses; // Configuration bytes that's presenting in some architectures
 } DeviceInfo;
 
+typedef struct BeginTransactionPayload
+{
+	uint8_t command;
+	uint8_t protocol_id;
+	uint8_t variant;
+	uint8_t icsp = 0;
+	uint8_t empty1 = 0;
+	uint16_t opts1;
+	uint8_t empty2;
+	uint32_t data_memory_size;
+	uint16_t opts2;
+	uint32_t opts3;
+	size_t data_memory2_size;
+	uint32_t code_memory_size;
+	uint8_t empty3[20];
+	uint32_t package_details;
+} BeginTransactionPayload;
+
+typedef struct EndTransactionPayload
+{
+	uint8_t command; // 0x04
+	uint8_t empty1[7];
+} EndTransactionPayload; // data structure must always be greater than or equal to 8 bytes.
+
 class TLProgrammer
 {
 public:
+	TLProgrammer();
+
 	ProgrammerInfo GetProgrammerInfo();
 	DeviceInfo* GetDevice(const char* name);
 
@@ -64,7 +93,8 @@ public:
 		m_Programmer.SetVerboseWrite();
 	}
 
-	void BeginTransaction();
+	void BeginTransaction(DeviceInfo* device);
+	void EndTransaction();
 private:
 
 	UsbDevice m_Programmer;
