@@ -9,14 +9,17 @@ static DeviceInfo devices[] =
 	{.name = NULL},
 };
 
-ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+TLProgrammer::TLProgrammer()
 {
 	if (!m_Programmer.IsDevicePresent())
 	{
 		std::cerr << "No programmer found!" << std::endl;
 		exit(0);
 	}
+}
 
+ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+{
 	ProgrammerInfo info;
 
 	m_Programmer.Write<const int>(&command_getsysteminfo, sizeof(command_getsysteminfo), 0x01);
@@ -39,9 +42,33 @@ DeviceInfo* TLProgrammer::GetDevice(const char* name)
 	return nullptr;
 }
 
-void TLProgrammer::BeginTransaction()
+void format_int(uint8_t* out, uint32_t in, uint8_t length)
 {
+	uint32_t index;
+	for (uint32_t i = 0; i < length; i++)
+	{
+		index = i;
+		out[i] = (in & 0xFF << index * 8) >> index * 8;
+	}
+}
 
+void TLProgrammer::BeginTransaction(DeviceInfo *device)
+{
+	uint8_t msg[64];
+	memset(&msg, 0, 64);
+
+	msg[0] = command_begintransaction;
+	msg[1] = device->protocol_id;
+	msg[2] = device->variant;
+	format_int(&msg[5], device->opts1, 2);
+	format_int(&msg[8], device->data_memory_size, 2);
+	format_int(&msg[10], device->opts2, 2);
+	format_int(&msg[12], device->opts3, 2);
+	format_int(&msg[14], device->data_memory2_size, 2);
+	format_int(&msg[16], device->code_memory_size, 4);
+	format_int(&msg[40], device->package_details, 4);
+
+	m_Programmer.Write(&msg, 64, 1);
 }
 
 #define MP_FUSE_USER            0x00

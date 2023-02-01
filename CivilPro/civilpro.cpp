@@ -7,10 +7,13 @@ CivilPro::CivilPro()
 {
 	ProgrammerInfo info = programmer.GetProgrammerInfo();
 
-	DeviceInfo *dev_inf = programmer.GetDevice("atmega32");
+	DeviceInfo *device_info = programmer.GetDevice("SST39SF020A");
 
-	if (dev_inf == nullptr)
+	if (device_info == nullptr)
 	{
 		std::cout << "Device not found!" << std::endl;
+		exit(0);
 	}
+
+	programmer.BeginTransaction(device_info);
 }
