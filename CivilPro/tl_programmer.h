@@ -3,7 +3,6 @@
 #include "device.h"
 
 constexpr int command_getsysteminfo = 0x00;
-constexpr int command_begintransaction = 0x03;
 
 struct ProgrammerInfo
 {
@@ -54,29 +53,9 @@ typedef struct DeviceInfo
 	Fuses* fuses; // Configuration bytes that's presenting in some architectures
 } DeviceInfo;
 
-typedef struct BeginTransactionPayload
-{
-	uint8_t command;
-	uint8_t protocol_id;
-	uint8_t variant;
-	uint8_t icsp;
-	uint8_t empty1;
-	uint16_t opts1;
-	uint8_t empty2;
-	uint32_t data_memory_size;
-	uint16_t opts2;
-	uint32_t opts3;
-	size_t data_memory2_size;
-	uint32_t code_memory_size;
-	uint8_t empty3[20];
-	uint32_t package_details;
-} BeginTransactionPayload;
-
 class TLProgrammer
 {
 public:
-	TLProgrammer();
-
 	ProgrammerInfo GetProgrammerInfo();
 	DeviceInfo* GetDevice(const char* name);
 
@@ -85,8 +64,9 @@ public:
 		m_Programmer.SetVerboseWrite();
 	}
 
-	void BeginTransaction(DeviceInfo *device);
+	void BeginTransaction();
 private:
 
 	UsbDevice m_Programmer;
+	DeviceInfo m_Device;
 };
