@@ -9,6 +9,8 @@ class CivilPro
 public:
 	CivilPro();
 
+	void Read();
 private:
-	TLProgrammer programmer;
+	TLProgrammer m_TLProgrammer;
+	DeviceInfo* m_Device;
 };

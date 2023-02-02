@@ -9,14 +9,17 @@ static DeviceInfo devices[] =
 	{.name = NULL},
 };
 
-ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+TLProgrammer::TLProgrammer()
 {
 	if (!m_Programmer.IsDevicePresent())
 	{
-		std::cerr << "No programmer found!" << std::endl;
+		std::cout << "No programmer found!" << std::endl;
 		exit(0);
 	}
+}
 
+ProgrammerInfo TLProgrammer::GetProgrammerInfo()
+{
 	ProgrammerInfo info;
 
 	m_Programmer.Write<const int>(&command_getsysteminfo, sizeof(command_getsysteminfo), 0x01);
@@ -39,9 +42,72 @@ DeviceInfo* TLProgrammer::GetDevice(const char* name)
 	return nullptr;
 }
 
-void TLProgrammer::BeginTransaction()
+void TLProgrammer::SetDevice(DeviceInfo* info)
 {
+	m_Device = info;
+}
 
+// sends 64 byte structure about the chip being read or written from
+void TLProgrammer::BeginTransaction(DeviceInfo* device)
+{
+	m_Device = device;
+
+	BeginTransactionPayload payload;
+	memset(&payload, 0, 64); // make sure to zero out the payload
+
+	payload.command = command_begintransaction;
+	payload.protocol_id = device->protocol_id;
+	payload.variant = device->variant;
+	payload.opts1 = device->opts1;
+	payload.data_memory_size = device->data_memory_size;
+	payload.opts2 = device->opts2;
+	payload.opts3 = device->opts3;
+	payload.data_memory2_size = device->data_memory2_size;
+	payload.code_memory_size = device->code_memory_size;
+	payload.package_details = device->package_details;
+
+	m_Programmer.Write<BeginTransactionPayload>(&payload, 64, 1);
+
+	// TODO: test for parity between this and MiniPro's begin transaction data structure.
+}
+
+void TLProgrammer::EndTransaction()
+{
+	EndTransactionPayload payload;
+	memset(&payload, 0, 8);
+
+	payload.command = command_endtransaction;
+
+	m_Programmer.Write<EndTransactionPayload>(&payload, 8, 1);
+}
+
+char* TLProgrammer::ReadBlock(unsigned int length, unsigned int address)
+{
+	ReadBlockPayload payload;
+	
+	payload.command = command_readcodememory;
+	payload.protocol_id = m_Device->protocol_id;
+	payload.length = length;
+	payload.address = address;
+
+	m_Programmer.Write<ReadBlockPayload>(&payload, 8, 1);
+
+	char* buffer = new char[length];
+
+	if (length < 64)
+	{
+		m_Programmer.Read(buffer, length, 1);
+	}
+	else
+	{
+		uint32_t endpoint_length = length / 2;
+
+		m_Programmer.Read(buffer, endpoint_length, 2);
+		m_Programmer.Read(buffer + endpoint_length, endpoint_length, 3);
+	}
+	
+	std::cout << sizeof(*buffer) << std::endl;
+	return buffer;
 }
 
 #define MP_FUSE_USER            0x00
