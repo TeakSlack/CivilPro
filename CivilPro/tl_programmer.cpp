@@ -46,6 +46,8 @@ void TLProgrammer::BeginTransaction(DeviceInfo* device)
 {
 	// 64 byte data structure communicated information about the chip being read/written from to the programmer
 
+	m_Device = device;
+
 	BeginTransactionPayload payload;
 	memset(&payload, 0, 64); // make sure to zero out the payload
 
@@ -73,6 +75,32 @@ void TLProgrammer::EndTransaction()
 	payload.command = command_endtransaction;
 
 	m_Programmer.Write<EndTransactionPayload>(&payload, 8, 1);
+}
+
+void TLProgrammer::ReadBlock(unsigned int length, unsigned int address)
+{
+	ReadBlockPayload payload;
+	
+	payload.command = command_readcodememory;
+	payload.protocol_id = m_Device->protocol_id;
+	payload.length = length;
+	payload.address = address;
+
+	m_Programmer.Write<ReadBlockPayload>(&payload, 8, 1);
+
+	unsigned int data = GetBlockFromProgrammer(length);
+}
+
+uint32_t TLProgrammer::GetBlockFromProgrammer(unsigned int length)
+{
+	char* buffer = new char[length];
+
+	uint32_t endpoint_length = length / 2;
+
+	m_Programmer.Read(buffer, endpoint_length, 2);
+	m_Programmer.Read(buffer + endpoint_length, endpoint_length, 3);
+
+	return 
 }
 
 #define MP_FUSE_USER            0x00

@@ -80,6 +80,14 @@ typedef struct EndTransactionPayload
 	uint8_t empty1[7];
 } EndTransactionPayload; // data structure must always be greater than or equal to 8 bytes.
 
+typedef struct ReadBlockPayload
+{
+	uint8_t command;
+	uint8_t protocol_id;
+	uint16_t length;
+	uint32_t address;
+} ReadBlockPayload;
+
 class TLProgrammer
 {
 public:
@@ -95,8 +103,10 @@ public:
 
 	void BeginTransaction(DeviceInfo* device);
 	void EndTransaction();
+	void ReadBlock(uint32_t length, uint32_t address);
+	uint32_t GetBlockFromProgrammer(uint32_t length);
 private:
 
 	UsbDevice m_Programmer;
-	DeviceInfo m_Device;
+	DeviceInfo* m_Device;
 };
