@@ -1,5 +1,4 @@
 #include "civilpro.h"
-#include "device.h"
 
 #include <iostream>
 
@@ -25,6 +24,8 @@ void CivilPro::Read()
 	if (m_Device->code_memory_size % m_Device->read_buffer_size != 0) // if last block is less than 64 bytes long, add one more block
 		blocks += 1;
 
+	char* buffer = new char[m_Device->code_memory_size];
+
 	for (int i = 0; i < blocks; i++)
 	{
 		uint32_t address = i * m_Device->read_buffer_size;
@@ -38,5 +39,8 @@ void CivilPro::Read()
 
 		if ((i + 1) * length > m_Device->code_memory_size) // gets size of last block to read
 			length = m_Device->code_memory_size % length;
+
+		char* block = m_TLProgrammer.ReadBlock(length, address);
+		memset(buffer + i * m_Device->read_buffer_size, *block, length); // memory trickery to fill buffer at the proper location
 	}
 }

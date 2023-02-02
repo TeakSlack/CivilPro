@@ -42,10 +42,14 @@ DeviceInfo* TLProgrammer::GetDevice(const char* name)
 	return nullptr;
 }
 
+void TLProgrammer::SetDevice(DeviceInfo* info)
+{
+	m_Device = info;
+}
+
+// sends 64 byte structure about the chip being read or written from
 void TLProgrammer::BeginTransaction(DeviceInfo* device)
 {
-	// 64 byte data structure communicated information about the chip being read/written from to the programmer
-
 	m_Device = device;
 
 	BeginTransactionPayload payload;
@@ -77,7 +81,7 @@ void TLProgrammer::EndTransaction()
 	m_Programmer.Write<EndTransactionPayload>(&payload, 8, 1);
 }
 
-void TLProgrammer::ReadBlock(unsigned int length, unsigned int address)
+char* TLProgrammer::ReadBlock(unsigned int length, unsigned int address)
 {
 	ReadBlockPayload payload;
 	
@@ -88,19 +92,22 @@ void TLProgrammer::ReadBlock(unsigned int length, unsigned int address)
 
 	m_Programmer.Write<ReadBlockPayload>(&payload, 8, 1);
 
-	unsigned int data = GetBlockFromProgrammer(length);
-}
-
-uint32_t TLProgrammer::GetBlockFromProgrammer(unsigned int length)
-{
 	char* buffer = new char[length];
 
-	uint32_t endpoint_length = length / 2;
+	if (length < 64)
+	{
+		m_Programmer.Read(buffer, length, 1);
+	}
+	else
+	{
+		uint32_t endpoint_length = length / 2;
 
-	m_Programmer.Read(buffer, endpoint_length, 2);
-	m_Programmer.Read(buffer + endpoint_length, endpoint_length, 3);
-
-	return 
+		m_Programmer.Read(buffer, endpoint_length, 2);
+		m_Programmer.Read(buffer + endpoint_length, endpoint_length, 3);
+	}
+	
+	std::cout << sizeof(*buffer) << std::endl;
+	return buffer;
 }
 
 #define MP_FUSE_USER            0x00

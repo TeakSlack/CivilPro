@@ -61,8 +61,8 @@ typedef struct BeginTransactionPayload
 	uint8_t command;
 	uint8_t protocol_id;
 	uint8_t variant;
-	uint8_t icsp = 0;
-	uint8_t empty1 = 0;
+	uint8_t icsp;
+	uint8_t empty1;
 	uint16_t opts1;
 	uint8_t empty2;
 	uint32_t data_memory_size;
@@ -95,6 +95,7 @@ public:
 
 	ProgrammerInfo GetProgrammerInfo();
 	DeviceInfo* GetDevice(const char* name);
+	void SetDevice(DeviceInfo* info);
 
 	inline void SetVerbose()
 	{
@@ -103,10 +104,8 @@ public:
 
 	void BeginTransaction(DeviceInfo* device);
 	void EndTransaction();
-	void ReadBlock(uint32_t length, uint32_t address);
-	uint32_t GetBlockFromProgrammer(uint32_t length);
+	char* ReadBlock(uint32_t length, uint32_t address);
 private:
-
 	UsbDevice m_Programmer;
 	DeviceInfo* m_Device;
 };
